@@ -7,10 +7,10 @@ int main() {
   while (1) {
     // Print prompt.
     if (last_exit_code) {
-      printf("%s%s%s", ANSI_COLOR_RED, PS1, ANSI_COLOR_RESET);
+      bad_prompt();
       last_exit_code = 0;
     } else {
-      printf(PS1);
+      prompt();
     }
 
     // Get command.
