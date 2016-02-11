@@ -88,10 +88,14 @@ int executecmd(cmd_t* cmd) {
   pid_t pid = fork();
   if (pid == 0) {
     // Child process executes command.
-    int code = execvp(cmd->args[0], cmd->args);
+    if (execvp(cmd->args[0], cmd->args) == -1) {
+      // Command was not found, so set exit code accordingly.
+      fprintf(stderr, "%s: command not found: %s\n", SHELL, cmd->args[0]);
+      exit(COMMAND_NOT_FOUND);
+    }
 
     // Exit with error code.
-    exit(code);
+    exit(errno);
   } else if (cmd->bg) {
     // TODO: Set up job here.
 
@@ -114,19 +118,11 @@ int executecmd(cmd_t* cmd) {
 
     // Get exit code.
     int exit_code = WEXITSTATUS(status);
-    switch (exit_code) {
-      case 0:
-        // All is good.
-        return 0;
-      case 255:
-        // Command not found, do not keep in history.
-        // TODO: Find better way of determining command was not found.
-        cmd->ok = 0;
-        fprintf(stderr, "%s: command not found: %s\n", SHELL, cmd->args[0]);
-        return 127;
-      default:
-        // Other error code.
-        return exit_code;
+    if (exit_code != 0) {
+      // Oops.
+      cmd->ok = 0;
     }
+
+    return exit_code;
   }
 }

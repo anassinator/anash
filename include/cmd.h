@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 #include "output.h"
 
 #define NUM_ARGS 20
+#define COMMAND_NOT_FOUND 127
 
 // Command type.
 typedef struct cmd_t {
