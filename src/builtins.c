@@ -10,6 +10,10 @@ int is_builtin(cmd_t* cmd) {
     return 1;
   }
 
+  if (strcmp(cmd->args[0], "exit") == 0) {
+    return 1;
+  }
+
   char* endptr = NULL;
   long num = strtol(cmd->args[0], &endptr, 10);
   if (*endptr == '\0' && !(num == 0 && errno == EINVAL)) {
@@ -33,6 +37,10 @@ int execute_builtin(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     int exit_code = builtin_history(hist);
     add_to_history(hist, cmd);
     return exit_code;
+  }
+
+  if (strcmp(cmd->args[0], "exit") == 0) {
+    return builtin_exit();
   }
 
   // Execute from history.
@@ -101,4 +109,10 @@ int builtin_exec_from_history(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     return executecmd(past_cmd, jobs, hist);
   }
   return COMMAND_NOT_FOUND;
+}
+
+
+int builtin_exit() {
+  exit(0);
+  return 0;
 }
