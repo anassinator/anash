@@ -14,6 +14,15 @@ int is_builtin(cmd_t* cmd) {
     return 1;
   }
 
+  if (strcmp(cmd->args[0], "cd") == 0) {
+    return 1;
+  }
+
+  if (strcmp(cmd->args[0], "pwd") == 0) {
+    return 1;
+  }
+
+
   char* endptr = NULL;
   long num = strtol(cmd->args[0], &endptr, 10);
   if (*endptr == '\0' && !(num == 0 && errno == EINVAL)) {
@@ -39,8 +48,24 @@ int execute_builtin(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     return exit_code;
   }
 
+  // Exit.
   if (strcmp(cmd->args[0], "exit") == 0) {
     return builtin_exit();
+  }
+
+  // Change directory.
+  if (strcmp(cmd->args[0], "cd") == 0) {
+    int exit_code = builtin_cd(cmd);
+    if (exit_code == 0) {
+      add_to_history(hist, cmd);
+    }
+    return exit_code;
+  }
+
+  // Print working directory.
+  if (strcmp(cmd->args[0], "pwd") == 0) {
+    add_to_history(hist, cmd);
+    return builtin_pwd();
   }
 
   // Execute from history.
@@ -109,6 +134,54 @@ int builtin_exec_from_history(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     return executecmd(past_cmd, jobs, hist);
   }
   return COMMAND_NOT_FOUND;
+}
+
+
+int builtin_pwd() {
+  // Print working directory.
+  char* cwd = getwd(NULL);
+  printf("%s\n", cwd);
+  free(cwd);
+  return 0;
+}
+
+
+int builtin_cd(cmd_t* cmd) {
+  // Change directory.
+  char* path;
+  if (cmd->args[1]) {
+    // Use path specified.
+    path = cmd->args[1];
+  } else {
+    // Otherwise, use home directory.
+    if ((path = getenv("HOME")) == NULL) {
+      struct passwd *pw = getpwuid(getuid());
+      path = pw->pw_dir;
+      free(pw);
+    }
+  }
+
+  int code = chdir(path);
+  if (code == 0) {
+    // Success.
+    return 0;
+  }
+
+  // Failed.
+  // TODO: Deal with other errno's.
+  switch (errno) {
+    case EACCES:
+      fprintf(stderr, "cd: permission denied: %s\n", path);
+      break;
+    case ENOENT:
+      fprintf(stderr, "cd: no such file or directory: %s\n", path);
+      break;
+    case ENOTDIR:
+      fprintf(stderr, "cd: not a directory: %s\n", path);
+      break;
+  }
+
+  return -1;
 }
 
 
