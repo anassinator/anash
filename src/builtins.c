@@ -5,15 +5,24 @@ int is_builtin(cmd_t* cmd) {
     return 1;
   }
 
+  if (strcmp(cmd->args[0], "history") == 0) {
+    return 1;
+  }
+
   // No.
   return 0;
 }
 
 
-int execute_builtin(cmd_t* cmd, job_list_t* jobs) {
+int execute_builtin(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   // List jobs.
   if (strcmp(cmd->args[0], "jobs") == 0) {
     return builtin_jobs(jobs);
+  }
+
+  // List history.
+  if (strcmp(cmd->args[0], "history") == 0) {
+    return builtin_history(hist);
   }
 
   // Command not found.
@@ -46,5 +55,35 @@ int builtin_jobs(job_list_t* jobs) {
   }
 
   // Return success.
+  return 0;
+}
+
+
+int builtin_history(history_t* hist) {
+  // Compute starting index.
+  int start = hist->count > MAX_HISTORY ? hist->count - MAX_HISTORY : 0;
+
+  // List them all.
+  for (int i = start; i < hist->count; i++) {
+    int index = i % MAX_HISTORY;
+    cmd_t* cmd = hist->commands[index];
+    if (cmd) {
+      printf("%5d  ", i + 1);
+      for (int j = 0; j < NUM_ARGS; j++) {
+        if (cmd->args[j] != NULL) {
+          printf("%s ", cmd->args[j]);
+        } else {
+          if (cmd->bg) {
+            printf("&");
+          }
+          printf("\n");
+          break;
+        }
+      }
+    } else {
+      break;
+    }
+  }
+
   return 0;
 }

@@ -3,6 +3,7 @@
 
 int main() {
   int last_exit_code = 0;
+  history_t* hist = create_history();
   job_list_t* jobs = create_job_list();
 
   while (1) {
@@ -18,12 +19,7 @@ int main() {
     cmd_t* cmd = getcmd();
 
     // Execute command.
-    last_exit_code = executecmd(cmd, jobs);
-
-    // Free memory.
-    if (!cmd->bg) {
-      freecmd(cmd);
-    }
+    last_exit_code = executecmd(cmd, jobs, hist);
   }
 
 

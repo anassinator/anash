@@ -114,8 +114,7 @@ int waitfor(pid_t pid, job_list_t* jobs) {
           }
         }
 
-        // Free memory allocated to command and job.
-        freecmd(job->cmd);
+        // Free memory allocated to job.
         free(job);
       }
     }
@@ -126,7 +125,7 @@ int waitfor(pid_t pid, job_list_t* jobs) {
 }
 
 
-int executecmd(cmd_t* cmd, job_list_t* jobs) {
+int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   if (!cmd->args[0]) {
     // Somebody just pressed enter...
     return 0;
@@ -136,7 +135,13 @@ int executecmd(cmd_t* cmd, job_list_t* jobs) {
   }
 
   if (is_builtin(cmd)) {
-    return execute_builtin(cmd, jobs);
+    int exit_code = execute_builtin(cmd, jobs, hist);
+    if (exit_code == 0) {
+      // Add to history if successful only.
+      add_to_history(hist, cmd);
+    }
+
+    return exit_code;
   }
 
   // Fork and execute.
@@ -161,6 +166,9 @@ int executecmd(cmd_t* cmd, job_list_t* jobs) {
     add_job(jobs, new_job);
     printf("[%d] %d\n", new_job->index, new_job->pid);
 
+    // Add to history, we don't know if it's good yet.
+    add_to_history(hist, cmd);
+
     // Exit code will come later.
     return 0;
   } else {
@@ -172,6 +180,9 @@ int executecmd(cmd_t* cmd, job_list_t* jobs) {
     if (exit_code != 0) {
       // Oops.
       cmd->ok = 0;
+    } else {
+      // It's good, add to history.
+      add_to_history(hist, cmd);
     }
 
     return exit_code;
@@ -284,4 +295,42 @@ job_t* get_job(job_list_t* jobs, pid_t pid) {
 
   // Not found.
   return NULL;
+}
+
+
+history_t* create_history() {
+  history_t* hist = malloc(sizeof(history_t));
+  for (int i = 0; i < MAX_HISTORY; i++) {
+    hist->commands[i] = NULL;
+  }
+  return hist;
+}
+
+
+void add_to_history(history_t* hist, cmd_t* cmd) {
+  // Determine index of command in history.
+  int index = hist->count % MAX_HISTORY;
+
+  // Add to history.
+  if (hist->commands[index]) {
+    // Free old commands from memory.
+    freecmd(hist->commands[index]);
+  }
+  hist->commands[index] = cmd;
+
+  // Increment count.
+  hist->count++;
+}
+
+
+cmd_t* get_from_history(history_t* hist, uint i) {
+  // Bound checking.
+  if (i > hist->count || i < hist->count - MAX_HISTORY) {
+    print_error("command %d not found in history", i);
+    return NULL;
+  }
+
+  // Extract command in question.
+  int index = (hist->count % MAX_HISTORY) - 1;
+  return hist->commands[index];
 }
