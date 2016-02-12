@@ -28,8 +28,9 @@ cmd_t* getcmd() {
   char* line = NULL;
   size_t linecap = 0;
   ssize_t length = getline(&line, &linecap, stdin);
-  if (length <= 0) {
-    exit(-1);
+  if (length == -1) {
+    // Handle EOF.
+    exit(0);
   }
 
   // Check if background is specified.
