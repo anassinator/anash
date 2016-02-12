@@ -3,6 +3,7 @@
 
 int main() {
   int last_exit_code = 0;
+  job_list_t* jobs = create_job_list();
 
   while (1) {
     // Print prompt.
@@ -17,10 +18,12 @@ int main() {
     cmd_t* cmd = getcmd();
 
     // Execute command.
-    last_exit_code = executecmd(cmd);
+    last_exit_code = executecmd(cmd, jobs);
 
     // Free memory.
-    freecmd(cmd);
+    if (!cmd->bg) {
+      freecmd(cmd);
+    }
   }
 
 

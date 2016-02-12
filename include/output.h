@@ -1,3 +1,6 @@
+#ifndef __OUTPUT_H
+#define __OUTPUT_H
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -12,3 +15,5 @@
 void prompt();
 void bad_prompt();
 void print_error(const char *format, ...);
+
+#endif
