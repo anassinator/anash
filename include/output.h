@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #define SHELL "anash"
 
