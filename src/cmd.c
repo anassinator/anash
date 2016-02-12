@@ -1,6 +1,24 @@
 #include "cmd.h"
 
 
+void printcmd(cmd_t* cmd) {
+  if (!cmd) {
+    return;
+  }
+  for (int j = 0; j < NUM_ARGS; j++) {
+    if (cmd->args[j] != NULL) {
+      printf("%s ", cmd->args[j]);
+    } else {
+      if (cmd->bg) {
+        printf("&");
+      }
+      printf("\n");
+      break;
+    }
+  }
+}
+
+
 cmd_t* getcmd() {
   // Initialize cmd.
   cmd_t* cmd = (cmd_t*) malloc(sizeof(cmd_t));
@@ -51,8 +69,10 @@ cmd_t* getcmd() {
     }
   }
 
-  // Set last element to null pointer.
-  cmd->args[arg_count] = NULL;
+  // Set last element to null pointer as well as all of the following.
+  for (int i = arg_count; i < NUM_ARGS; i++) {
+    cmd->args[i] = NULL;
+  }
 
   // Free line from memory.
   free(start_of_line);
@@ -67,7 +87,7 @@ void freecmd(cmd_t* cmd) {
     if (cmd->args[i]) {
       free(cmd->args[i]);
     } else {
-      break;
+      // break;
     }
   }
 
@@ -105,14 +125,7 @@ int waitfor(pid_t pid, job_list_t* jobs) {
 
         // Notify completion.
         printf("[%d]  + %d %s\t", job->index, job->pid, exit_status);
-        for (int i = 0; i < NUM_ARGS; i++) {
-          if (job->cmd->args[i] != NULL) {
-            printf("%s ", job->cmd->args[i]);
-          } else {
-            printf("\n");
-            break;
-          }
-        }
+        printcmd(job->cmd);
 
         // Free memory allocated to job.
         free(job);
@@ -136,11 +149,6 @@ int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
 
   if (is_builtin(cmd)) {
     int exit_code = execute_builtin(cmd, jobs, hist);
-    if (exit_code == 0) {
-      // Add to history if successful only.
-      add_to_history(hist, cmd);
-    }
-
     return exit_code;
   }
 
@@ -300,6 +308,7 @@ job_t* get_job(job_list_t* jobs, pid_t pid) {
 
 history_t* create_history() {
   history_t* hist = malloc(sizeof(history_t));
+  hist->count = 0;
   for (int i = 0; i < MAX_HISTORY; i++) {
     hist->commands[i] = NULL;
   }
@@ -325,12 +334,12 @@ void add_to_history(history_t* hist, cmd_t* cmd) {
 
 cmd_t* get_from_history(history_t* hist, uint i) {
   // Bound checking.
-  if (i > hist->count || i < hist->count - MAX_HISTORY) {
+  if (i > hist->count) {
     print_error("command %d not found in history", i);
     return NULL;
   }
 
   // Extract command in question.
-  int index = (hist->count % MAX_HISTORY) - 1;
+  int index = (i % MAX_HISTORY) - 1;
   return hist->commands[index];
 }

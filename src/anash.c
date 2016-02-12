@@ -22,6 +22,5 @@ int main() {
     last_exit_code = executecmd(cmd, jobs, hist);
   }
 
-
   return 0;
 }
