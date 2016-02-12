@@ -22,6 +22,9 @@ int is_builtin(cmd_t* cmd) {
     return 1;
   }
 
+  if (strcmp(cmd->args[0], "fg") == 0) {
+    return 1;
+  }
 
   char* endptr = NULL;
   long num = strtol(cmd->args[0], &endptr, 10);
@@ -66,6 +69,11 @@ int execute_builtin(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   if (strcmp(cmd->args[0], "pwd") == 0) {
     add_to_history(hist, cmd);
     return builtin_pwd();
+  }
+
+  // Bring to foreground.
+  if (strcmp(cmd->args[0], "fg") == 0) {
+    return builtin_fg(cmd, jobs);
   }
 
   // Execute from history.
@@ -181,11 +189,42 @@ int builtin_cd(cmd_t* cmd) {
       break;
   }
 
-  return -1;
+  return 1;
 }
 
 
 int builtin_exit() {
   exit(0);
   return 0;
+}
+
+
+int builtin_fg(cmd_t* cmd, job_list_t* jobs) {
+  int index = -1;
+  job_t* curr_job;
+  if (cmd->args[1]) {
+    // Get job specified.
+    index = (int) strtol(cmd->args[1], NULL, 10);
+    curr_job = get_job_by_index(jobs, index);
+  } else {
+    // Otherwise get latest job.
+    curr_job = get_latest_job(jobs);
+  }
+
+  if (curr_job) {
+    // Wait for process to complete.
+    int exit_code = waitfor(curr_job->pid, jobs);
+
+    // Extract completed job from job list.
+    get_job(jobs, curr_job->pid);
+
+    return exit_code;
+  } else {
+    if (index > 0) {
+      fprintf(stderr, "fg: job not found: %d\n", index);
+    } else {
+      fprintf(stderr, "fg: no current job\n");
+    }
+    return 1;
+  }
 }

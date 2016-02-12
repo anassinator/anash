@@ -270,8 +270,10 @@ job_t* get_job(job_list_t* jobs, pid_t pid) {
   if (curr_job->pid == pid) {
     if (jobs->next) {
       // Bring next job_list forth.
+      job_list_t* old_next = jobs->next;
       jobs->root = jobs->next->root;
       jobs->next = jobs->next->next;
+      free(old_next);
     } else {
       // Clear list if now empty.
       jobs->root = NULL;
@@ -303,6 +305,56 @@ job_t* get_job(job_list_t* jobs, pid_t pid) {
 
   // Not found.
   return NULL;
+}
+
+
+job_t* get_job_by_index(job_list_t* jobs, int index) {
+  // Not found if empty.
+  if (!jobs->root) {
+    return NULL;
+  }
+
+  // Get current job.
+  job_t* curr_job = jobs->root;
+
+  // Get current job if first in list.
+  if (curr_job->index == index) {
+    return curr_job;
+  }
+
+  // Otherwise traverse list until found.
+  job_list_t* curr_job_list = jobs;
+  while (curr_job_list->next) {
+    curr_job = curr_job_list->root;
+
+    // Get job from list.
+    if (curr_job->index == index) {
+      return curr_job;
+    }
+
+    // Update pointers.
+    curr_job_list = curr_job_list->next;
+  }
+
+  // Not found.
+  return NULL;
+}
+
+
+
+job_t* get_latest_job(job_list_t* jobs) {
+  // Not found if empty.
+  if (!jobs->root) {
+    return NULL;
+  }
+
+  // Go through list.
+  job_list_t* curr_job_list = jobs;
+  while (curr_job_list->next) {
+    curr_job_list = curr_job_list->next;
+  }
+
+  return curr_job_list->root;
 }
 
 

@@ -54,7 +54,9 @@ int executecmd(cmd_t*, job_list_t*, history_t*);
 // Job prototypes.
 job_list_t* create_job_list();
 void add_job(job_list_t*, job_t*);
+job_t* get_latest_job(job_list_t*);
 job_t* get_job(job_list_t*, pid_t);
+job_t* get_job_by_index(job_list_t*, int);
 
 // History prototypes.
 history_t* create_history();
