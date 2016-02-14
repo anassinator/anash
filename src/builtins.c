@@ -138,8 +138,9 @@ int builtin_exec_from_history(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   int index = (int) strtol(cmd->args[0], NULL, 10);
   cmd_t* past_cmd = get_from_history(hist, index);
   if (past_cmd) {
-    printcmd(past_cmd);
-    return executecmd(past_cmd, jobs, hist);
+    cmd_t* new_cmd = copycmd(past_cmd);
+    printcmd(new_cmd);
+    return executecmd(new_cmd, jobs, hist);
   }
   return COMMAND_NOT_FOUND;
 }

@@ -38,7 +38,7 @@ typedef struct job_list_t {
 
 // History type.
 typedef struct history_t {
-  int count;
+  uint count;
   cmd_t* commands[MAX_HISTORY];
 } history_t;
 
@@ -48,6 +48,7 @@ typedef struct history_t {
 cmd_t* getcmd();
 void freecmd(cmd_t*);
 void printcmd(cmd_t*);
+cmd_t* copycmd(cmd_t*);
 int waitfor(pid_t, job_list_t*);
 int executecmd(cmd_t*, job_list_t*, history_t*);
 

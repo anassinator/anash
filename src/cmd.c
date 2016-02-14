@@ -97,6 +97,23 @@ void freecmd(cmd_t* cmd) {
 }
 
 
+cmd_t* copycmd(cmd_t* old_cmd) {
+  // Deep copy old command.
+  cmd_t* new_cmd = (cmd_t*) malloc(sizeof(cmd_t));
+  new_cmd->ok = old_cmd->ok;
+  new_cmd->bg = old_cmd->bg;
+  for (int i = 0; i < NUM_ARGS; i++) {
+    if (old_cmd->args[i]) {
+      new_cmd->args[i] = (char*) malloc(strlen(old_cmd->args[i]) + 1);
+      strcpy(new_cmd->args[i], old_cmd->args[i]);
+    } else {
+      new_cmd->args[i] = NULL;
+    }
+  }
+  return new_cmd;
+}
+
+
 int waitfor(pid_t pid, job_list_t* jobs) {
   // Wait for child process to exit.
   int status;
@@ -167,7 +184,7 @@ int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     exit(errno);
   } else if (cmd->bg) {
     // Set up job.
-    job_t* new_job = malloc(sizeof(job_t));
+    job_t* new_job = (job_t*) malloc(sizeof(job_t));
     new_job->cmd = cmd;
     new_job->pid = pid;
 
@@ -360,7 +377,7 @@ job_t* get_latest_job(job_list_t* jobs) {
 
 
 history_t* create_history() {
-  history_t* hist = malloc(sizeof(history_t));
+  history_t* hist = (history_t*) malloc(sizeof(history_t));
   hist->count = 0;
   for (int i = 0; i < MAX_HISTORY; i++) {
     hist->commands[i] = NULL;
