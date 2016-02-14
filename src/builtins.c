@@ -28,6 +28,7 @@ int is_builtin(cmd_t* cmd) {
 
   char* endptr = NULL;
   long num = strtol(cmd->args[0], &endptr, 10);
+  // TODO: Deal with ERANGE.
   if (*endptr == '\0' && !(num == 0 && errno == EINVAL)) {
     return 1;
   }
@@ -73,7 +74,11 @@ int execute_builtin(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
 
   // Bring to foreground.
   if (strcmp(cmd->args[0], "fg") == 0) {
-    return builtin_fg(cmd, jobs);
+    int exit_code = builtin_fg(cmd, jobs);
+    if (exit_code == 0) {
+      add_to_history(hist, cmd);
+    }
+    return exit_code;
   }
 
   // Execute from history.
