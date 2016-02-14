@@ -10,7 +10,7 @@ void printcmd(cmd_t* cmd, FILE* file) {
       fprintf(file, "%s ", cmd->args[j]);
     } else {
       // Print output redirection.
-      if (cmd->stdout) {
+      if (cmd->stdout != NULL) {
         fprintf(file, "> %s ", cmd->stdout);
       }
 
@@ -31,6 +31,7 @@ cmd_t* getcmd() {
   cmd_t* cmd = (cmd_t*) malloc(sizeof(cmd_t));
   cmd->ok = 1;
   cmd->bg = 0;
+  cmd->stdout = NULL;
 
   // Get line from STDIN.
   char* line = NULL;
@@ -119,6 +120,7 @@ cmd_t* copycmd(cmd_t* old_cmd) {
   cmd_t* new_cmd = (cmd_t*) malloc(sizeof(cmd_t));
   new_cmd->ok = old_cmd->ok;
   new_cmd->bg = old_cmd->bg;
+  new_cmd->stdout = old_cmd->stdout;
   for (int i = 0; i < NUM_ARGS; i++) {
     if (old_cmd->args[i]) {
       new_cmd->args[i] = (char*) malloc(strlen(old_cmd->args[i]) + 1);
@@ -203,19 +205,19 @@ int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   pid_t pid = fork();
   if (pid == 0) {
     // Store file descriptor of output.
-    int fd;
+    int fd = fileno(stdout);
 
     // Redirect output if necessary.
     if (cmd->stdout) {
       // Close STDOUT.
-      close(fileno(stdout));
+      close(fd);
 
       // Open file descriptor in place with default permissions.
       // 0644 -> -rw-r--r--
       fd = open(cmd->stdout, O_WRONLY | O_CREAT | O_TRUNC, 0644);
       if (fd == -1) {
         print_error("could not open: %s", cmd->stdout);
-        return -1;
+        exit(-1);
       }
     }
 
