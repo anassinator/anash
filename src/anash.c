@@ -7,6 +7,9 @@ int main() {
   job_list_t* jobs = create_job_list();
 
   while (1) {
+    // Clear any zombie processes.
+    clear_zombies(jobs);
+
     // Print prompt.
     if (last_exit_code) {
       bad_prompt();

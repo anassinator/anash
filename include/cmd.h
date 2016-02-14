@@ -51,7 +51,8 @@ cmd_t* getcmd();
 void freecmd(cmd_t*);
 cmd_t* copycmd(cmd_t*);
 void printcmd(cmd_t*, FILE*);
-int waitfor(pid_t, job_list_t*);
+void clear_zombies(job_list_t*);
+int waitfor(pid_t, job_list_t*, int);
 int executecmd(cmd_t*, job_list_t*, history_t*);
 
 // Job prototypes.

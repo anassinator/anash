@@ -131,11 +131,23 @@ cmd_t* copycmd(cmd_t* old_cmd) {
 }
 
 
-int waitfor(pid_t pid, job_list_t* jobs) {
+void clear_zombies(job_list_t* jobs) {
+  // Clear zombie processes by checking if any child processes have changed
+  // state.
+  waitfor(-1, jobs, 1);
+}
+
+
+int waitfor(pid_t pid, job_list_t* jobs, int async) {
   // Wait for child process to exit.
   int status;
   pid_t child_pid;
   while ((child_pid = waitpid(-1, &status, WNOHANG)) != -1) {
+    if (async && child_pid == 0) {
+      // No child has changed state.
+      return status;
+    }
+
     if (child_pid == pid) {
       // Found foreground child.
       break;
@@ -242,8 +254,8 @@ int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
     // Exit code will come later.
     return 0;
   } else {
-    // Hang until complete.
-    int status = waitfor(pid, jobs);
+    // Hang until complete synchronously.
+    int status = waitfor(pid, jobs, 0);
 
     // Get exit code.
     int exit_code = WEXITSTATUS(status);

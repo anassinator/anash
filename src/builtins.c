@@ -213,8 +213,8 @@ int builtin_fg(cmd_t* cmd, job_list_t* jobs) {
   }
 
   if (curr_job) {
-    // Wait for process to complete.
-    int exit_code = waitfor(curr_job->pid, jobs);
+    // Wait for process to complete synchronously.
+    int exit_code = waitfor(curr_job->pid, jobs, 0);
 
     // Extract completed job from job list.
     get_job(jobs, curr_job->pid);
