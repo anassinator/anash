@@ -402,9 +402,9 @@ void add_to_history(history_t* hist, cmd_t* cmd) {
 }
 
 
-cmd_t* get_from_history(history_t* hist, uint i) {
+cmd_t* get_from_history(history_t* hist, int i) {
   // Bound checking.
-  if (i > hist->count) {
+  if (i > hist->count || (i < hist->count - MAX_HISTORY && i > 0)) {
     print_error("command %d not found in history", i);
     return NULL;
   }

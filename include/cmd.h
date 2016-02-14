@@ -38,7 +38,7 @@ typedef struct job_list_t {
 
 // History type.
 typedef struct history_t {
-  uint count;
+  int count;
   cmd_t* commands[MAX_HISTORY];
 } history_t;
 
@@ -62,6 +62,6 @@ job_t* get_job_by_index(job_list_t*, int);
 // History prototypes.
 history_t* create_history();
 void add_to_history(history_t*, cmd_t*);
-cmd_t* get_from_history(history_t*, uint);
+cmd_t* get_from_history(history_t*, int);
 
 #endif
