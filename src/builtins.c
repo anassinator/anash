@@ -148,7 +148,7 @@ int builtin_exec_from_history(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
 
 int builtin_pwd() {
   // Print working directory.
-  char* cwd = getwd(NULL);
+  char* cwd = getcwd(NULL, 0);
   printf("%s\n", cwd);
   free(cwd);
   return 0;
