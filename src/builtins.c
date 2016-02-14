@@ -98,7 +98,7 @@ int builtin_jobs(job_list_t* jobs) {
     // Print current job.
     job_t* curr_job = curr_job_list->root;
     printf("[%d]  + running\t", curr_job->index);
-    printcmd(curr_job->cmd);
+    printcmd(curr_job->cmd, stdout);
 
     // Update pointer.
     if (curr_job_list->next) {
@@ -123,7 +123,7 @@ int builtin_history(history_t* hist) {
     cmd_t* cmd = hist->commands[index];
     if (cmd) {
       printf("%5d  ", i + 1);
-      printcmd(cmd);
+      printcmd(cmd, stdout);
     } else {
       break;
     }
@@ -139,7 +139,7 @@ int builtin_exec_from_history(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   cmd_t* past_cmd = get_from_history(hist, index);
   if (past_cmd) {
     cmd_t* new_cmd = copycmd(past_cmd);
-    printcmd(new_cmd);
+    printcmd(new_cmd, stdout);
     return executecmd(new_cmd, jobs, hist);
   }
   return COMMAND_NOT_FOUND;

@@ -1,6 +1,7 @@
 #ifndef __CMD_H
 #define __CMD_H
 
+#include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -21,6 +22,7 @@ typedef struct cmd_t {
   int ok;
   char* args[NUM_ARGS];
   int bg;
+  char* stdout;
 } cmd_t;
 
 // Job type.
@@ -47,8 +49,8 @@ typedef struct history_t {
 // Command prototypes.
 cmd_t* getcmd();
 void freecmd(cmd_t*);
-void printcmd(cmd_t*);
 cmd_t* copycmd(cmd_t*);
+void printcmd(cmd_t*, FILE*);
 int waitfor(pid_t, job_list_t*);
 int executecmd(cmd_t*, job_list_t*, history_t*);
 

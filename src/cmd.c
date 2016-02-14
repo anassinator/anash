@@ -1,19 +1,26 @@
 #include "cmd.h"
 
 
-void printcmd(cmd_t* cmd) {
+void printcmd(cmd_t* cmd, FILE* file) {
   if (!cmd) {
     return;
   }
   for (int j = 0; j < NUM_ARGS; j++) {
     if (cmd->args[j] != NULL) {
-      printf("%s ", cmd->args[j]);
+      fprintf(file, "%s ", cmd->args[j]);
     } else {
-      if (cmd->bg) {
-        printf("&");
+      // Print output redirection.
+      if (cmd->stdout) {
+        fprintf(file, "> %s ", cmd->stdout);
       }
-      printf("\n");
-      break;
+
+      // Print background.
+      if (cmd->bg) {
+        fprintf(file, "&");
+      }
+
+      fprintf(file, "\n");
+      return;
     }
   }
 }
@@ -23,6 +30,7 @@ cmd_t* getcmd() {
   // Initialize cmd.
   cmd_t* cmd = (cmd_t*) malloc(sizeof(cmd_t));
   cmd->ok = 1;
+  cmd->bg = 0;
 
   // Get line from STDIN.
   char* line = NULL;
@@ -31,15 +39,6 @@ cmd_t* getcmd() {
   if (length == -1) {
     // Handle EOF.
     exit(0);
-  }
-
-  // Check if background is specified.
-  char* loc;
-  if ((loc = index(line, '&')) != NULL) {
-    cmd->bg = 1;
-    *loc = ' ';
-  } else {
-    cmd->bg = 0;
   }
 
   // Tokenize.
@@ -61,6 +60,24 @@ cmd_t* getcmd() {
         cmd->ok = 0;
         print_error("too many arguments");
         return cmd;
+      } else if (strcmp(token, ">") == 0) {
+        // Output redirection must be specified.
+        do {
+          // Tokenize until file name of output is found.
+          if ((token = strsep(&line, " \t\n")) == NULL) {
+            // Output not properly specified.
+            cmd->ok = 0;
+            print_error("stdout not specified");
+            return cmd;
+          }
+        } while (strcmp(token, "") == 0);
+
+        // Copy stdout to command.
+        cmd->stdout = (char*) malloc(strlen(token) + 1);
+        strcpy(cmd->stdout, token);
+      } else if (strcmp(token, "&") == 0) {
+        // Run in background.
+        cmd->bg = 1;
       } else {
         // Treat every token as a CLI argument.
         cmd->args[arg_count] = (char*) malloc(strlen(token) + 1);
@@ -143,7 +160,7 @@ int waitfor(pid_t pid, job_list_t* jobs) {
 
         // Notify completion.
         printf("[%d]  + %d %s\t", job->index, job->pid, exit_status);
-        printcmd(job->cmd);
+        printcmd(job->cmd, stdout);
 
         // Free memory allocated to job.
         free(job);
@@ -173,11 +190,38 @@ int executecmd(cmd_t* cmd, job_list_t* jobs, history_t* hist) {
   // Fork and execute.
   pid_t pid = fork();
   if (pid == 0) {
+    // Store file descriptor of output.
+    int fd;
+
+    // Redirect output if necessary.
+    if (cmd->stdout) {
+      // Close STDOUT.
+      close(fileno(stdout));
+
+      // Open file descriptor in place with default permissions.
+      // 0644 -> -rw-r--r--
+      fd = open(cmd->stdout, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (fd == -1) {
+        print_error("could not open: %s", cmd->stdout);
+        return -1;
+      }
+    }
+
     // Child process executes command.
     if (execvp(cmd->args[0], cmd->args) == -1) {
       // Command was not found, so set exit code accordingly.
       fprintf(stderr, "%s: command not found: %s\n", SHELL, cmd->args[0]);
+
+      // Close file.
+      if (cmd->stdout) {
+        close(fd);
+      }
       exit(COMMAND_NOT_FOUND);
+    }
+
+    // Close file.
+    if (cmd->stdout) {
+      close(fd);
     }
 
     // Exit with error code.
