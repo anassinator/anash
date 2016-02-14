@@ -10,5 +10,8 @@ all: anash
 anash: $(SRC)
 	$(CC) $(CFLAGS) $(SRCS)
 
+install: anash
+	cp anash /usr/local/bin
+
 clean:
 	rm -f anash

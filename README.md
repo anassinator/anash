@@ -11,10 +11,26 @@ Just run:
 make
 ```
 
+Installing
+----------
+Just run:
+
+```bash
+sudo make install
+```
+
 Running
 -------
 Just run:
 
 ```bash
+anash
+```
+
+if you have installed the executable, or
+
+```bash
 ./anash
 ```
+
+otherwise.
