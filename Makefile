@@ -7,7 +7,7 @@ CFLAGS = -Wall -std=c11 -o anash -I'include' -g -O3 -D _GNU_SOURCE
 
 all: anash
 
-anash: $(SRC)
+anash: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS)
 
 install: anash
